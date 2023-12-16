@@ -1,6 +1,6 @@
 {
-    "name": "@u4/adbkit",
-    "version": "4.1.19",
+    "name": "qiqi-adbkit",
+    "version": "1.0.1",
     "description": "A Typescript client for the Android Debug Bridge.",
     "keywords": [
         "adb",
@@ -15,27 +15,14 @@
         "adbkit": "./bin/adbkit"
     },
     "bugs": {
-        "url": "https://github.com/UrielCh/adbkit/issues"
+        "url": "https://github.com/iamqiqi1017/adbkit/issues"
     },
     "license": "Apache-2.0",
-    "funding": "https://github.com/sponsors/urielch",
-    "author": {
-        "name": "openstf",
-        "email": "contact@openstf.io",
-        "url": "https://urielch.github.io/"
-    },
-    "contributors": [
-        {
-            "name": "uriel chemouni",
-            "email": "uchemouni@gmail.com",
-            "url": "https://urielch.github.io/"
-        }
-    ],
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "repository": {
         "type": "git",
-        "url": "https://github.com/UrielCh/adbkit.git"
+        "url": "https://github.com/iamqiqi1017/adbkit.git"
     },
     "scripts": {
         "clean": "rimraf dist",
