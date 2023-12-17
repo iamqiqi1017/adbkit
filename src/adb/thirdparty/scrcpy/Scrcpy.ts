@@ -1,7 +1,7 @@
 /*
  * @Author: mingLiang
  * @Date: 2023-12-16 23:12:15
- * @LastEditTime: 2023-12-17 00:53:47
+ * @LastEditTime: 2023-12-17 01:04:24
  * @FilePath: \adbkit\src\adb\thirdparty\scrcpy\Scrcpy.ts
  */
 import EventEmitter from 'events';
@@ -309,17 +309,17 @@ export default class Scrcpy extends EventEmitter {
     if (!dstStat || srcStat.size !== dstStat.size) {
       try {
         debug(`pushing scrcpy-server.jar to ${this.client.serial}`);
-        console.log('推送jar包到手机');
+        // console.log('推送jar包到手机');
         const transfer = await this.client.push(jar, jarDest);
         await transfer.waitForEnd();
       } catch (e) {
         debug(`Impossible to transfer server scrcpy-server.jar to ${this.client.serial}`, e);
-        console.log('推送jar包到手机失败');
+        // console.log('推送jar包到手机失败');
         throw e;
       }
     } else {
       debug(`scrcpy-server.jar already present in ${this.client.serial}, keep it`);
-      console.log('jar包已经存在，跳过推送');
+      // console.log('jar包已经存在，跳过推送');
     }
     // Start server
     try {
@@ -328,20 +328,20 @@ export default class Scrcpy extends EventEmitter {
       if (this.closed)
         // can not start once stop called
         return this;
-      console.log(`启动scrcpyServer ${cmdLine}`);
+      // console.log(`启动scrcpyServer ${cmdLine}`);
       const duplex = await this.client.shell(cmdLine);
-      console.log(`scrcpyServer启动成功`);
+      // console.log(`scrcpyServer成功`);
       this.scrcpyServer = new PromiseDuplex(duplex);
       this.scrcpyServer.once('finish').then(() => {
         debug(`scrcpyServer finished on device ${this.client.serial}`);
-        console.log(`scrcpyServer停止 ${this.client.serial}`);
+        // console.log(`scrcpyServer已停止 ${this.client.serial}`);
         this.stop();
       });
       // debug only
       // extraUtils.dumpReadable(this.scrcpyServer, 'scrcpyServer');
     } catch (e) {
       debug('Impossible to run server:', e);
-      console.log('启动scrcpyServer失败');
+      // console.log('启动scrcpyServer失败');
       throw e;
     }
     let info = '';
@@ -357,8 +357,7 @@ export default class Scrcpy extends EventEmitter {
       if (info.includes('[server] INFO: Device: ')) break;
     }
     this.throwsErrors(this.scrcpyServer);
-    console.log(info);
-    console.log('scrcpy连接正常');
+    // console.log(info);
     if (this.closed) return this;
     await Utils.delay(1000);
     this.videoSocket = await this.client.openLocal2('localabstract:scrcpy', 'first connection to scrcpy for video');
@@ -377,9 +376,7 @@ export default class Scrcpy extends EventEmitter {
     }
     // First chunk is 69 bytes length -> 1 dummy byte, 64 bytes for deviceName, 2 bytes for width & 2 bytes for height
     try {
-      console.log(111);
       await Utils.waitforReadable(this.videoSocket, 0, 'videoSocket 1st 1 bit chunk');
-      console.log(1211);
       const firstChunk = (await this.videoSocket.read(1)) as Buffer;
       if (!firstChunk) {
         throw Error('fail to read firstChunk, inclease tunnelDelay for this device.');
@@ -391,7 +388,6 @@ export default class Scrcpy extends EventEmitter {
         throw Error(`Control code should be 0x00, receves nothing.`);
       }
     } catch (e) {
-      console.log(333);
       debug('Impossible to read first chunk:', e);
       throw e;
     }
@@ -436,7 +432,8 @@ export default class Scrcpy extends EventEmitter {
 
   private startStreamRaw() {
     assert(this.videoSocket);
-    console.log('startStreamRaw');
+    // console.log('startStreamRaw');
+    console.log('scrcpy连接成功');
     this.videoSocket.stream.on('data', (data) => {
       // console.log('rowdata', data);
       this.emit('raw', data);
@@ -449,7 +446,7 @@ export default class Scrcpy extends EventEmitter {
    */
   private async startStreamWithMeta(): Promise<void> {
     assert(this.videoSocket);
-    console.log('startStreamWithMeta');
+    // console.log('startStreamWithMeta');
     this.videoSocket.stream.pause();
     console.log('22');
     await Utils.waitforReadable(this.videoSocket, 0, 'videoSocket header');
