@@ -63,10 +63,8 @@ export default class DeviceClient {
   }
 
   public sudo(): DeviceClient {
-    if (this.options.sudo)
-      return this;
-    else
-      return new DeviceClient(this.client, this.serial, { ...this.options, sudo: true })
+    if (this.options.sudo) return this;
+    else return new DeviceClient(this.client, this.serial, { ...this.options, sudo: true });
   }
 
   /**
@@ -82,7 +80,7 @@ export default class DeviceClient {
   /**
    * Gets the device path of the device identified by the given serial number.
    * @returns The device path. This corresponds to the device path in `client.listDevicesWithPaths()`.
-   * 
+   *
    * @example
    * List devices withPath
    * ```ts
@@ -127,16 +125,16 @@ export default class DeviceClient {
 
   /**
    * Retrieves the features of the device identified by the given serial number. This is analogous to `adb shell pm list features`. Useful for checking whether hardware features such as NFC are available (you'd check for `'android.hardware.nfc'`).
-   * 
+   *
    * @returns An object of device features. Each key corresponds to a device feature, with the value being either `true` for a boolean feature, or the feature value as a string (e.g. `'0x20000'` for `reqGlEsVersion`).
-   * 
+   *
    * @example
    * Checking for NFC support
    * ```ts
    * import Adb from '@u4/adbkit';
-   * 
+   *
    * const client = Adb.createClient();
-   * 
+   *
    * const test = async () => {
    *     try {
    *         const devices = await client.listDevices();
@@ -230,22 +228,26 @@ export default class DeviceClient {
    *
    * @returns a PsEntry array
    */
-  public async callServiceRaw(serviceName: hostCmd.KnownServices | string, code: number | string, ...args: Array<ServiceCallArg>): Promise<ParcelReader> {
+  public async callServiceRaw(
+    serviceName: hostCmd.KnownServices | string,
+    code: number | string,
+    ...args: Array<ServiceCallArg>
+  ): Promise<ParcelReader> {
     const transport = await this.transport();
     return new ServiceCallCommand(transport, this.options).execute(serviceName, code, args);
   }
 
   /**
    * Attemps to retrieve the IP addresses of the device. using `ip addr show` command.
-   * 
+   *
    * @param [iface] The network interface. Defaults to `'wlan0'`.
    *
    * @returns The IP addresses as string[] starting with IPv4 then IPv6.
    */
   public async getIpAddress(iface = 'wlan0'): Promise<string[]> {
     const ipData = await this.execOut(`ip addr show ${iface}`, 'utf-8');
-    const ipV4 = [...ipData.matchAll(/inet ([\d]+\.[\d]+\.[\d]+\.[\d]+)\/\d+/g)].map(m => m[1])
-    const ipV6 = [...ipData.matchAll(/inet6 ([0-9a-f:]+)\/\d+/g)].map(m => m[1])
+    const ipV4 = [...ipData.matchAll(/inet ([\d]+\.[\d]+\.[\d]+\.[\d]+)\/\d+/g)].map((m) => m[1]);
+    const ipV6 = [...ipData.matchAll(/inet6 ([0-9a-f:]+)\/\d+/g)].map((m) => m[1]);
     return [...ipV4, ...ipV6];
   }
 
@@ -278,10 +280,10 @@ export default class DeviceClient {
    * @returns the used port
    */
   public async tryForwardTCP(remote: string, preferedPort?: number): Promise<number> {
-    const fwds = await this.listForwards()
+    const fwds = await this.listForwards();
     // const usedPort = fwds.filter(a => a.local === local);
-    const usedPort = fwds.filter(a => a.remote === remote);
-    const prev = usedPort.filter(a => a.remote === remote && a.serial === this.serial);
+    const usedPort = fwds.filter((a) => a.remote === remote);
+    const prev = usedPort.filter((a) => a.remote === remote && a.serial === this.serial);
     if (prev.length) {
       // already connected
       return Number(prev[0].local.substring(4));
@@ -289,13 +291,12 @@ export default class DeviceClient {
 
     if (preferedPort && !usedPort.length)
       try {
-        if (await this.forward(`tcp:${preferedPort}`, remote))
-          return preferedPort;
+        if (await this.forward(`tcp:${preferedPort}`, remote)) return preferedPort;
       } catch (e) {
         // need a new port
       }
     const freePort = await getPort();
-    await this.forward(`tcp:${freePort}`, remote)
+    await this.forward(`tcp:${freePort}`, remote);
     return freePort;
   }
 
@@ -395,11 +396,11 @@ export default class DeviceClient {
    * Progressively read the output of a long-running command and terminate it
    * ```ts
    * import Adb from '@u4/adbkit';
-   * 
+   *
    * const client = Adb.createClient();
    * const devices = await client.listDevices()
    * for (const device of devices) {
-   *   // logcat just for illustration, prefer client.openLogcat in real use 
+   *   // logcat just for illustration, prefer client.openLogcat in real use
    *   const conn = await device.getClient().shell('logcat')
    *   let line = 0
    *   conn.on('data', function(data) {
@@ -434,12 +435,15 @@ export default class DeviceClient {
    */
   public async execOut(command: string | ArrayLike<WithToString>): Promise<Buffer>;
   public async execOut(command: string | ArrayLike<WithToString>, encoding: BufferEncoding): Promise<string>;
-  public async execOut(command: string | ArrayLike<WithToString>, encoding?: BufferEncoding): Promise<string | Buffer | undefined> {
-    const duplex = new PromiseDuplex(await (this.exec(command)));
+  public async execOut(
+    command: string | ArrayLike<WithToString>,
+    encoding?: BufferEncoding,
+  ): Promise<string | Buffer | undefined> {
+    const duplex = new PromiseDuplex(await this.exec(command));
     if (encoding) {
       duplex.setEncoding(encoding);
     }
-    return duplex.readAll()
+    return duplex.readAll();
   }
 
   /**
@@ -535,23 +539,18 @@ export default class DeviceClient {
    */
   public async openLocal(path: string): Promise<Duplex> {
     const transport = await this.transport();
-    return new hostCmd.LocalCommand(transport, this.options).execute(path);
+    return new hostCmd.LocalCommand(transport).execute(path);
   }
 
   /**
    * Testing only
    */
-  public async openLocal2(path: string, debugCtxt = ''): Promise<PromiseDuplex<Duplex>> {
+  public async openLocal2(path: string): Promise<PromiseDuplex<Duplex>> {
     const transport = await this.transport();
     const data = path.includes(':') ? path : `localfilesystem:${path}`;
     const duplex = new PromiseDuplex(transport.parser.raw());
     await duplex.write(Protocol.encodeData(data));
-    await Utils.waitforReadable(duplex, 0, `openLocal2 ${data} - ${debugCtxt}`);
-    const code = await (duplex.read(4) as Promise<Buffer>);
-    if (!code.equals(Protocol.bOKAY)) {
-      if (code.equals(Protocol.bFAIL)) throw await transport.parser.readError();
-      throw transport.parser.unexpected(code.toString('ascii'), 'OKAY or FAIL');
-    }
+    await Utils.waitforReadable(duplex, 0);
     return duplex;
   }
 
@@ -572,7 +571,7 @@ export default class DeviceClient {
 
      * @param port The port number to connect to.
      * @param host Optional. The host to connect to. Allegedly this is supposed to establish a connection to the given host from the device, but we have not been able to get it to work at all. Skip the host and everything works great.
-     * 
+     *
      * @returns The TCP connection (i.e. [`net.Socket`][node-net]). Read and write as you please. Call `conn.end()` to end the connection.
      */
   public async openTcp(port: number, host?: string): Promise<Duplex> {
@@ -598,7 +597,7 @@ export default class DeviceClient {
       } catch (err) {
         if ((times -= 1)) {
           debug(`Monkey can't be reached, trying ${times} more times`);
-          await Utils.delay(100)
+          await Utils.delay(100);
           return tryConnect(times);
         } else {
           throw err;
@@ -682,9 +681,9 @@ export default class DeviceClient {
    * import Adb from '@u4/adbkit';
    * import request from 'request';
    * import { Readable } from 'stream';
-   * 
+   *
    * const client = Adb.createClient();
-   * 
+   *
    * const test = async () => {
    *   // The request module implements old-style streams, so we have to wrap it.
    *   try {
@@ -701,10 +700,10 @@ export default class DeviceClient {
    * Install an apk to all connected devices
    * ```ts
    * import Adb from '@u4/adbkit';
-   * 
+   *
    * const client = Adb.createClient();
    * const apk = 'vendor/app.apk';
-   * 
+   *
    * const test = async () => {
    *     try {
    *         const devices = await client.listDevices();
@@ -723,7 +722,7 @@ export default class DeviceClient {
     const transfer = await this.push(apk, temp);
     await transfer.waitForEnd();
     const value = await this.installRemote(temp);
-    return value
+    return value;
   }
 
   /**
@@ -816,15 +815,15 @@ export default class DeviceClient {
   }
 
   /**
-    * A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
-    *
-    * @param path The path.
-    * 
-    * @returns An [`fs.Stats`][node-fs-stats] instance. While the `stats.is*` methods are available, only the following properties are supported:
-    *  -   **mode** The raw mode.
-    *  -   **size** The file size.
-    *  -   **mtime** The time of last modification as a `Date`.
-    */
+   * A convenience shortcut for `sync.stat()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+   *
+   * @param path The path.
+   *
+   * @returns An [`fs.Stats`][node-fs-stats] instance. While the `stats.is*` methods are available, only the following properties are supported:
+   *  -   **mode** The raw mode.
+   *  -   **size** The file size.
+   *  -   **mtime** The time of last modification as a `Date`.
+   */
   public async stat(path: string): Promise<Stats> {
     const sync = await this.syncService();
     try {
@@ -835,15 +834,15 @@ export default class DeviceClient {
   }
 
   /**
-    * A convenience shortcut for `sync.stat64()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
-     *
-     * @param path The path.
-     * 
-     * @returns An [`fs.Stats`][node-fs-stats] instance. While the `stats.is*` methods are available, only the following properties are supported:
-     *  -   **mode** The raw mode.
-     *  -   **size** The file size.
-     *  -   **mtime** The time of last modification as a `Date`.
-     */
+   * A convenience shortcut for `sync.stat64()`, mainly for one-off use cases. The connection cannot be reused, resulting in poorer performance over multiple calls. However, the Sync client will be closed automatically for you, so that's one less thing to worry about.
+   *
+   * @param path The path.
+   *
+   * @returns An [`fs.Stats`][node-fs-stats] instance. While the `stats.is*` methods are available, only the following properties are supported:
+   *  -   **mode** The raw mode.
+   *  -   **size** The file size.
+   *  -   **mtime** The time of last modification as a `Date`.
+   */
   public async stat64(path: string): Promise<Stats64> {
     const sync = await this.syncService();
     try {
@@ -864,7 +863,7 @@ export default class DeviceClient {
    * import Bluebird from 'bluebird';
    * import Adb from '@u4/adbkit';
    * const client = Adb.createClient();
-   * 
+   *
    * const test = async () => {
    *     try {
    *         const devices = await client.listDevices();
@@ -915,7 +914,7 @@ export default class DeviceClient {
    * @param path See `sync.pull()` for details.
    *
    * @returns A `PullTransfer` instance.
-   * 
+   *
    * @example
    * Pulling a file from all cofnnected devices
    * ```ts
@@ -923,7 +922,7 @@ export default class DeviceClient {
    * import fs from 'fs';
    * import Adb from '@u4/adbkit';
    * const client = Adb.createClient();
-   * 
+   *
    * const test = async () => {
    *     try {
    *         const devices = await client.listDevices();
@@ -952,7 +951,7 @@ export default class DeviceClient {
   public async pull(path: string): Promise<PullTransfer> {
     const sync = await this.syncService();
     const pullTransfer = await sync.pull(path);
-    pullTransfer.waitForEnd().finally(() => sync.end())
+    pullTransfer.waitForEnd().finally(() => sync.end());
     return pullTransfer;
   }
 
@@ -962,14 +961,14 @@ export default class DeviceClient {
    * @param contents See `sync.push()` for details.
    * @param path See `sync.push()` for details.
    * @param mode See `sync.push()` for details.
-   * 
+   *
    * @example
    * Pushing a file to all connected devices
    * ```ts
    * import Bluebird from 'bluebird';
    * import Adb from '@u4/adbkit';
    * const client = Adb.createClient();
-   * 
+   *
    * const test = async () => {
    *     try {
    *         const devices = await client.listDevices();
@@ -996,7 +995,7 @@ export default class DeviceClient {
   public async push(contents: string | ReadStream, path: string, mode?: number): Promise<PushTransfer> {
     const sync = await this.syncService();
     const transfert = await sync.push(contents, path, mode);
-    transfert.waitForEnd().finally(() => sync.end())
+    transfert.waitForEnd().finally(() => sync.end());
     return transfert;
   }
 
@@ -1060,7 +1059,7 @@ export default class DeviceClient {
   }
 
   /**
-   * prepare a STFService and STFagent 
+   * prepare a STFService and STFagent
    * this server must be started with the start() method
    */
   public STFService(options?: Partial<STFServiceOptions>): STFService {
@@ -1087,12 +1086,12 @@ export default class DeviceClient {
    */
   public async listPackages(options?: { thirdparty?: boolean }): Promise<DevicePackage[]> {
     options = options || {};
-    let cmd = 'pm list packages'
+    let cmd = 'pm list packages';
     if (options.thirdparty) {
       cmd += ' -3';
     }
     const list = await this.execOut(cmd, 'utf-8');
     const packages = [...list.matchAll(/package:([\w\d.]+)/g)];
-    return packages.map(m => new DevicePackage(this, m[1]));
+    return packages.map((m) => new DevicePackage(this, m[1]));
   }
 }
