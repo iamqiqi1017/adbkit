@@ -2,7 +2,7 @@
 /*
  * @Author: mingLiang
  * @Date: 2023-12-16 23:12:15
- * @LastEditTime: 2023-12-27 13:37:36
+ * @LastEditTime: 2023-12-30 10:44:56
  * @FilePath: \adbkit\src\adb\thirdparty\scrcpy\Scrcpy.ts
  */
 import EventEmitter from 'events';
@@ -68,7 +68,7 @@ export default class Scrcpy extends EventEmitter {
     super();
     this.config = {
       version: '2.3.1',
-      maxSize: 600,
+      maxSize: 720,
       maxFps: 60,
       control: false,
       ...config,
@@ -193,9 +193,9 @@ export default class Scrcpy extends EventEmitter {
     args.push('log_level=info');
     args.push(`max_size=${maxSize}`);
     args.push(`max_fps=${maxFps}`);
-    args.push('control=false');
+    args.push('control=true');
     args.push('audio=false');
-    args.push('cleanup=false');
+    args.push('cleanup=true');
     // args.push('send_frame_meta=true');
     // args.push('send_codec_meta=false');
     // args.push('send_device_meta=false');
